@@ -1,0 +1,1239 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="Fingerprint-based attendance system dashboard with live monitoring, user management, and attendance logs." />
+  <title>Fingerprint Attendance System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <style>
+    /* ─── CSS Reset & Variables ─── */
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-primary: #0a0e1a;
+      --bg-secondary: #111827;
+      --bg-card: #1a2035;
+      --bg-card-hover: #1e2745;
+      --bg-input: #0f1629;
+      --border: #1e293b;
+      --border-focus: #6366f1;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --accent-glow: rgba(99, 102, 241, 0.25);
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.2);
+      --danger: #ef4444;
+      --danger-hover: #f87171;
+      --warning: #f59e0b;
+      --gradient-1: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
+      --gradient-2: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+      --gradient-danger: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.5);
+      --shadow-glow: 0 0 30px var(--accent-glow);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    html {
+      font-size: 16px;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ─── Animated Background ─── */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(139, 92, 246, 0.06) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 80%, rgba(16, 185, 129, 0.04) 0%, transparent 50%);
+      z-index: 0;
+      animation: bgShift 20s ease infinite alternate;
+    }
+
+    @keyframes bgShift {
+      0% {
+        transform: translate(0, 0) scale(1);
+      }
+
+      100% {
+        transform: translate(-3%, 2%) scale(1.05);
+      }
+    }
+
+    /* ─── App Container ─── */
+    .app {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+
+    /* ─── Header ─── */
+    .header {
+      text-align: center;
+      padding: 2rem 0 1.5rem;
+    }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 100px;
+      padding: 0.4rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--accent-hover);
+      margin-bottom: 1rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .header-badge .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 2s ease infinite;
+    }
+
+    .header-badge.disconnected .dot {
+      background: var(--danger);
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.5;
+        transform: scale(0.8);
+      }
+    }
+
+    .header h1 {
+      font-size: 2.25rem;
+      font-weight: 800;
+      background: var(--gradient-1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .header p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      margin-top: 0.5rem;
+    }
+
+    /* ─── Stats Bar ─── */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      transition: var(--transition);
+    }
+
+    .stat-card:hover {
+      border-color: var(--accent);
+      box-shadow: var(--shadow-glow);
+      transform: translateY(-2px);
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .stat-icon.purple {
+      background: rgba(99, 102, 241, 0.15);
+    }
+
+    .stat-icon.green {
+      background: rgba(16, 185, 129, 0.15);
+    }
+
+    .stat-icon.amber {
+      background: rgba(245, 158, 11, 0.15);
+    }
+
+    .stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    /* ─── Tabs ─── */
+    .tab-bar {
+      display: flex;
+      gap: 0.25rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 0.3rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-primary);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 2px 12px var(--accent-glow);
+    }
+
+    .tab-panel {
+      display: none;
+      animation: fadeIn 0.35s ease;
+    }
+
+    .tab-panel.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ─── Cards ─── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 1.25rem;
+      transition: var(--transition);
+    }
+
+    .card:hover {
+      border-color: rgba(99, 102, 241, 0.15);
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* ─── Live Feed ─── */
+    .live-feed {
+      max-height: 480px;
+      overflow-y: auto;
+    }
+
+    .live-feed::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .live-feed::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .live-feed::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+
+    .feed-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.9rem 1rem;
+      border-radius: var(--radius-sm);
+      margin-bottom: 0.5rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid transparent;
+      animation: slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      transition: var(--transition);
+    }
+
+    .feed-item:hover {
+      background: rgba(99, 102, 241, 0.05);
+      border-color: rgba(99, 102, 241, 0.1);
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateX(-20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .feed-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--gradient-1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    .feed-avatar.error {
+      background: var(--gradient-danger);
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+    }
+
+    .feed-avatar.late {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      box-shadow: 0 0 15px rgba(245, 158, 11, 0.25);
+    }
+
+    .feed-badge-late {
+      display: inline-block;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      color: #fbbf24;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      border-radius: 99px;
+      letter-spacing: 0.05em;
+      margin-left: 0.4rem;
+      vertical-align: middle;
+    }
+
+    .feed-info {
+      flex: 1;
+    }
+
+    .feed-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .feed-id {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    .feed-time {
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state .icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.3;
+    }
+
+    .empty-state p {
+      font-size: 0.9rem;
+    }
+
+    /* ─── Tables ─── */
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    thead th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      background: var(--bg-card);
+    }
+
+    tbody td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+      color: var(--text-secondary);
+    }
+
+    tbody tr {
+      transition: var(--transition);
+    }
+
+    tbody tr:hover {
+      background: rgba(99, 102, 241, 0.04);
+    }
+
+    tbody tr:hover td {
+      color: var(--text-primary);
+    }
+
+    /* ─── Forms ─── */
+    .form-row {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      flex: 1;
+      min-width: 150px;
+    }
+
+    .form-group label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    input[type="date"] {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 0.7rem 1rem;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 0.9rem;
+      transition: var(--transition);
+      outline: none;
+      width: 100%;
+    }
+
+    input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    input::placeholder {
+      color: var(--text-muted);
+    }
+
+    /* ─── Buttons ─── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.4rem;
+      padding: 0.65rem 1.25rem;
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .btn-primary {
+      background: var(--gradient-1);
+      color: #fff;
+      box-shadow: 0 2px 12px var(--accent-glow);
+    }
+
+    .btn-primary:hover {
+      box-shadow: 0 4px 20px var(--accent-glow);
+      transform: translateY(-1px);
+    }
+
+    .btn-success {
+      background: var(--gradient-2);
+      color: #fff;
+      box-shadow: 0 2px 12px var(--success-glow);
+    }
+
+    .btn-success:hover {
+      transform: translateY(-1px);
+    }
+
+    .btn-danger {
+      background: transparent;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: var(--danger);
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: var(--danger);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .btn-sm {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.78rem;
+    }
+
+    /* ─── Filter Bar ─── */
+    .filter-bar {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+
+    /* ─── Toast Notifications ─── */
+    .toast-container {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .toast {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 0.9rem 1.25rem;
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      animation: toastIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      max-width: 380px;
+      font-size: 0.88rem;
+    }
+
+    .toast.success {
+      border-left: 3px solid var(--success);
+    }
+
+    .toast.error {
+      border-left: 3px solid var(--danger);
+    }
+
+    .toast.info {
+      border-left: 3px solid var(--accent);
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateX(100px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes toastOut {
+      from {
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      to {
+        opacity: 0;
+        transform: translateX(100px);
+      }
+    }
+
+    /* ─── Responsive ─── */
+    @media (max-width: 768px) {
+      .app {
+        padding: 1rem;
+      }
+
+      .header h1 {
+        font-size: 1.6rem;
+      }
+
+      .tab-btn {
+        font-size: 0.78rem;
+        padding: 0.6rem 0.5rem;
+      }
+
+      .stat-card {
+        padding: 1rem;
+      }
+
+      .stat-value {
+        font-size: 1.3rem;
+      }
+
+      .form-row {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-badge" id="statusBadge">
+        <span class="dot"></span>
+        <span id="statusText">Connecting...</span>
+      </div>
+      <h1>Fingerprint Attendance</h1>
+      <p>Real-time biometric attendance tracking system</p>
+      <p style="margin-top:0.25rem;font-size:0.8rem;color:var(--text-muted);">⏰ Attendance window: <span id="windowInfo"
+          style="color:var(--accent);font-weight:600;">02:00 – 02:38</span></p>
+    </header>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-icon purple">👤</div>
+        <div>
+          <div class="stat-value" id="statUsers">0</div>
+          <div class="stat-label">Enrolled Users</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green">✅</div>
+        <div>
+          <div class="stat-value" id="statToday">0</div>
+          <div class="stat-label">Today's Check-ins</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon amber">📊</div>
+        <div>
+          <div class="stat-value" id="statTotal">0</div>
+          <div class="stat-label">Total Records</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tab-bar" role="tablist">
+      <button class="tab-btn active" data-tab="live" id="tabLive" role="tab" aria-selected="true">
+        <span>📡</span> Live Feed
+      </button>
+      <button class="tab-btn" data-tab="users" id="tabUsers" role="tab" aria-selected="false">
+        <span>👥</span> Manage Users
+      </button>
+      <button class="tab-btn" data-tab="log" id="tabLog" role="tab" aria-selected="false">
+        <span>📋</span> Attendance Log
+      </button>
+    </div>
+
+    <!-- Tab 1: Live Attendance -->
+    <div class="tab-panel active" id="panelLive" role="tabpanel">
+      <div class="card">
+        <div class="card-title">
+          <span>📡</span> Live Attendance Stream
+          <span style="flex:1"></span>
+          <button class="btn btn-outline btn-sm" id="btnExport" onclick="exportCSV()">⬇ Export CSV</button>
+        </div>
+        <div class="live-feed" id="liveFeed">
+          <div class="empty-state" id="emptyFeed">
+            <div class="icon">👆</div>
+            <p>Waiting for fingerprint scans...</p>
+            <p style="margin-top:0.3rem; font-size:0.8rem;">Scan events appear here in real-time</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 2: Manage Users -->
+    <div class="tab-panel" id="panelUsers" role="tabpanel">
+      <div class="card">
+        <div class="card-title"><span>➕</span> Enroll New User</div>
+        <form id="enrollForm" onsubmit="enrollUser(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="inputName">Full Name</label>
+              <input type="text" id="inputName" placeholder="e.g. Maged" required />
+            </div>
+            <div class="form-group">
+              <label for="inputId">Fingerprint ID</label>
+              <input type="number" id="inputId" placeholder="1-127" min="1" max="127" required />
+            </div>
+            <div class="form-group" style="justify-content:flex-end;">
+              <button type="submit" class="btn btn-primary" id="btnEnroll">
+                <span>✋</span> Enroll Fingerprint
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><span>👥</span> Enrolled Users</div>
+        <div class="table-wrapper">
+          <table id="usersTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersBody">
+              <tr>
+                <td colspan="3" style="text-align:center;color:var(--text-muted);padding:2rem;">Loading users...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab 3: Attendance Log -->
+    <div class="tab-panel" id="panelLog" role="tabpanel">
+      <div class="card">
+        <div class="card-title"><span>🔍</span> Filter Attendance</div>
+        <div class="filter-bar">
+          <div class="form-group">
+            <label for="filterName">Name</label>
+            <input type="text" id="filterName" placeholder="Search by name..." oninput="filterAttendance()" />
+          </div>
+          <div class="form-group">
+            <label for="filterDate">Date</label>
+            <input type="date" id="filterDate" onchange="filterAttendance()" />
+          </div>
+          <div class="form-group" style="justify-content:flex-end;">
+            <button class="btn btn-outline btn-sm" onclick="clearFilters()">✕ Clear</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">
+          <span>📋</span> Full Attendance Log
+          <span style="flex:1"></span>
+          <span class="stat-label" id="logCount">0 records</span>
+        </div>
+        <div class="table-wrapper" style="max-height:500px;overflow-y:auto;">
+          <table id="logTable">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Date</th>
+                <th>Time</th>
+              </tr>
+            </thead>
+            <tbody id="logBody">
+              <tr>
+                <td colspan="4" style="text-align:center;color:var(--text-muted);padding:2rem;">Loading...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <script>
+    /* ═══════════════════════════════════════════
+       Fingerprint Attendance — Frontend JS
+       ═══════════════════════════════════════════ */
+
+    const API = '';  // same origin
+
+    // ─── State ───
+    let users = [];
+    let attendance = [];
+    let liveFeedItems = [];
+
+    // ─── Tab Navigation ───
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        document.getElementById('panel' + capitalize(btn.dataset.tab)).classList.add('active');
+
+        // Lazy-load data when switching tabs
+        if (btn.dataset.tab === 'users') loadUsers();
+        if (btn.dataset.tab === 'log') loadAttendance();
+      });
+    });
+
+    function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    // ─── API Calls ───
+    async function loadUsers() {
+      try {
+        const res = await fetch(`${API}/users`);
+        users = await res.json();
+        renderUsers();
+        document.getElementById('statUsers').textContent = users.length;
+      } catch (e) {
+        console.error('Failed to load users:', e);
+      }
+    }
+
+    async function loadAttendance() {
+      try {
+        const res = await fetch(`${API}/attendance`);
+        attendance = await res.json();
+        renderAttendance();
+        document.getElementById('statTotal').textContent = attendance.length;
+        updateTodayCount();
+      } catch (e) {
+        console.error('Failed to load attendance:', e);
+      }
+    }
+
+    async function loadStatus() {
+      try {
+        const res = await fetch(`${API}/status`);
+        const data = await res.json();
+        document.getElementById('statUsers').textContent = data.users_count || 0;
+        document.getElementById('statTotal').textContent = data.attendance_count || 0;
+        updateSerialStatus(data.serial_connected);
+      } catch (e) {
+        updateSerialStatus(false);
+      }
+    }
+
+    // ─── Render Users Table ───
+    function renderUsers() {
+      const tbody = document.getElementById('usersBody');
+      if (users.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;color:var(--text-muted);padding:2rem;">No users enrolled yet</td></tr>';
+        return;
+      }
+      tbody.innerHTML = users.map(u => `
+    <tr>
+      <td style="font-weight:600;color:var(--accent);">#${u.id}</td>
+      <td style="color:var(--text-primary);font-weight:500;">${escHtml(u.name)}</td>
+      <td>
+        <button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id}, '${escHtml(u.name)}')">🗑 Delete</button>
+      </td>
+    </tr>
+  `).join('');
+    }
+
+    // ─── Render Attendance Table ───
+    function renderAttendance(data) {
+      const list = data || attendance;
+      const tbody = document.getElementById('logBody');
+      document.getElementById('logCount').textContent = `${list.length} records`;
+
+      if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-muted);padding:2rem;">No attendance records</td></tr>';
+        return;
+      }
+
+      // Show newest first
+      tbody.innerHTML = [...list].reverse().map(r => {
+        const [date, time] = splitTimestamp(r.timestamp);
+        return `
+      <tr>
+        <td style="font-weight:600;color:var(--accent);">#${r.id}</td>
+        <td style="color:var(--text-primary);font-weight:500;">${escHtml(r.name)}</td>
+        <td>${date}</td>
+        <td>${time}</td>
+      </tr>
+    `;
+      }).join('');
+    }
+
+    function splitTimestamp(ts) {
+      if (!ts) return ['—', '—'];
+      const parts = ts.split(' ');
+      return parts.length >= 2 ? [parts[0], parts[1]] : [ts, ''];
+    }
+
+    // ─── Filter Attendance ───
+    function filterAttendance() {
+      const nameQ = document.getElementById('filterName').value.toLowerCase().trim();
+      const dateQ = document.getElementById('filterDate').value; // yyyy-mm-dd
+
+      const filtered = attendance.filter(r => {
+        const nameMatch = !nameQ || r.name.toLowerCase().includes(nameQ);
+        const dateMatch = !dateQ || (r.timestamp && r.timestamp.startsWith(dateQ));
+        return nameMatch && dateMatch;
+      });
+      renderAttendance(filtered);
+    }
+
+    function clearFilters() {
+      document.getElementById('filterName').value = '';
+      document.getElementById('filterDate').value = '';
+      renderAttendance();
+    }
+
+    // ─── Enroll User ───
+    async function enrollUser(e) {
+      e.preventDefault();
+      const name = document.getElementById('inputName').value.trim();
+      const id = parseInt(document.getElementById('inputId').value, 10);
+
+      if (!name || !id) return;
+
+      const btn = document.getElementById('btnEnroll');
+      btn.disabled = true;
+      btn.textContent = '⏳ Enrolling...';
+
+      try {
+        const res = await fetch(`${API}/users`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id, name })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          showToast(err.detail || 'Enrollment failed', 'error');
+          return;
+        }
+
+        showToast(`Enrolling ${name} (ID #${id}) — place finger on sensor!`, 'success');
+        document.getElementById('inputName').value = '';
+        document.getElementById('inputId').value = '';
+        loadUsers();
+      } catch (e) {
+        showToast('Connection error', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<span>✋</span> Enroll Fingerprint';
+      }
+    }
+
+    // ─── Delete User ───
+    async function deleteUser(id, name) {
+      if (!confirm(`Delete ${name} (ID #${id})? This will also remove the fingerprint from the sensor.`)) return;
+
+      try {
+        const res = await fetch(`${API}/users/${id}`, { method: 'DELETE' });
+        if (!res.ok) {
+          const err = await res.json();
+          showToast(err.detail || 'Delete failed', 'error');
+          return;
+        }
+        showToast(`Deleted ${name}`, 'info');
+        loadUsers();
+      } catch (e) {
+        showToast('Connection error', 'error');
+      }
+    }
+
+    // ─── Export CSV ───
+    function exportCSV() {
+      window.open(`${API}/export`, '_blank');
+    }
+
+    // ─── SSE (Server-Sent Events) ───
+    let eventSource = null;
+    let reconnectTimer = null;
+
+    function connectSSE() {
+      if (eventSource) { eventSource.close(); }
+
+      eventSource = new EventSource(`${API}/events`);
+
+      eventSource.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          handleSSE(data);
+        } catch (err) {
+          console.warn('SSE parse error:', err);
+        }
+      };
+
+      eventSource.onerror = () => {
+        updateSerialStatus(false);
+        eventSource.close();
+        // Reconnect after 3s
+        clearTimeout(reconnectTimer);
+        reconnectTimer = setTimeout(connectSSE, 3000);
+      };
+    }
+
+    function handleSSE(data) {
+      switch (data.type) {
+        case 'connected':
+          updateSerialStatus(data.serial);
+          break;
+
+        case 'serial_status':
+          updateSerialStatus(data.connected);
+          break;
+
+        case 'attendance':
+          addLiveFeedItem(data);
+          updateTodayCount();
+          document.getElementById('statTotal').textContent =
+            parseInt(document.getElementById('statTotal').textContent || '0') + 1;
+          // Refresh attendance log if visible
+          if (document.getElementById('panelLog').classList.contains('active')) loadAttendance();
+          break;
+
+        case 'no_match':
+          addLiveFeedItem({ name: 'Unknown', id: '—', timestamp: data.timestamp, isError: true });
+          break;
+
+        case 'late':
+          addLiveFeedItem({ name: data.name, id: data.id, timestamp: data.timestamp, isLate: true, cutoff: data.cutoff });
+          showToast(`⏰ ${data.name} scanned after ${data.cutoff} — marked LATE, not counted`, 'warning');
+          break;
+
+        case 'enrolled':
+          showToast(`Fingerprint ID #${data.id} enrolled successfully!`, 'success');
+          loadUsers();
+          break;
+
+        case 'deleted':
+          showToast(`Fingerprint ID #${data.id} deleted`, 'info');
+          break;
+
+        case 'user_added':
+          loadUsers();
+          break;
+
+        case 'user_deleted':
+          loadUsers();
+          break;
+
+        case 'error':
+          showToast(`Sensor error: ${data.msg}`, 'error');
+          break;
+
+        case 'ready':
+          showToast('Fingerprint sensor ready!', 'success');
+          updateSerialStatus(true);
+          break;
+      }
+    }
+
+    function updateSerialStatus(connected) {
+      const badge = document.getElementById('statusBadge');
+      const text = document.getElementById('statusText');
+      if (connected) {
+        badge.classList.remove('disconnected');
+        text.textContent = 'Sensor Connected';
+      } else {
+        badge.classList.add('disconnected');
+        text.textContent = 'Sensor Disconnected';
+      }
+    }
+
+    // ─── Live Feed ───
+    function addLiveFeedItem(data) {
+      const feed = document.getElementById('liveFeed');
+      const empty = document.getElementById('emptyFeed');
+      if (empty) empty.remove();
+
+      const initial = data.name ? data.name.charAt(0).toUpperCase() : '?';
+      const time = data.timestamp ? data.timestamp.split(' ').pop() : new Date().toLocaleTimeString();
+
+      const div = document.createElement('div');
+      div.className = 'feed-item';
+
+      let avatarClass = '';
+      let avatarContent = initial;
+      let nameHtml = escHtml(data.name);
+      let subText = 'ID #' + data.id;
+
+      if (data.isError) {
+        avatarClass = 'error';
+        avatarContent = '✕';
+        nameHtml = 'Unknown Finger';
+        subText = 'Not registered';
+      } else if (data.isLate) {
+        avatarClass = 'late';
+        avatarContent = '⏰';
+        nameHtml = escHtml(data.name) + '<span class="feed-badge-late">LATE</span>';
+        subText = `ID #${data.id} — declined after ${data.cutoff}`;
+      }
+
+      div.innerHTML = `
+    <div class="feed-avatar ${avatarClass}">${avatarContent}</div>
+    <div class="feed-info">
+      <div class="feed-name">${nameHtml}</div>
+      <div class="feed-id">${subText}</div>
+    </div>
+    <div class="feed-time">${time}</div>
+  `;
+
+      feed.insertBefore(div, feed.firstChild);
+
+      // Keep max 50 items
+      while (feed.children.length > 50) {
+        feed.removeChild(feed.lastChild);
+      }
+    }
+
+    // ─── Today's Count ───
+    function updateTodayCount() {
+      const today = new Date().toISOString().split('T')[0];
+      const count = attendance.filter(r => r.timestamp && r.timestamp.startsWith(today)).length;
+      document.getElementById('statToday').textContent = count;
+    }
+
+    // ─── Toast Notifications ───
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+      const toast = document.createElement('div');
+      // map 'warning' to amber style
+      const cssType = type === 'warning' ? 'error' : type;
+      toast.className = `toast ${cssType}`;
+      toast.style.borderLeftColor = type === 'warning' ? '#f59e0b' : '';
+      toast.innerHTML = `<span>${icons[type] || 'ℹ️'}</span><span>${escHtml(message)}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.animation = 'toastOut 0.3s ease forwards';
+        setTimeout(() => toast.remove(), 300);
+      }, 5000);
+    }
+
+    // ─── Utility ───
+    function escHtml(s) {
+      const div = document.createElement('div');
+      div.textContent = s || '';
+      return div.innerHTML;
+    }
+
+    // ─── Initialize ───
+    document.addEventListener('DOMContentLoaded', () => {
+      loadStatus();
+      loadUsers();
+      loadAttendance();
+      connectSSE();
+
+      // Refresh stats periodically
+      setInterval(loadStatus, 30000);
+    });
+  </script>
+</body>
+
+</html>
