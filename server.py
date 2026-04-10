@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Fingerprint Attendance System — FastAPI Backend
 Communicates with Arduino via USB Serial, serves REST API + SSE.
@@ -392,4 +393,4 @@ async def sse_endpoint(request: Request):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("server:app", host="0.0.0.0", port=8001, reload=True)
